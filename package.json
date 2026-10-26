@@ -6,7 +6,10 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "test": "node --test"
+    "test": "node --test",
+    "build:mobile": "node scripts/build-mobile.mjs",
+    "android:sync": "npm run build:mobile && npx cap sync android",
+    "android:apk": "npm run android:sync && cd android && ./gradlew assembleDebug"
   },
   "repository": {
     "type": "git",
@@ -19,6 +22,10 @@
   },
   "homepage": "https://github.com/michben/url2mark#readme",
   "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/share": "^8.0.3",
     "@mozilla/readability": "^0.6.0",
     "express": "^5.3.0",
     "jsdom": "^29.1.1",
@@ -29,5 +36,9 @@
   "type": "module",
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.3",
+    "esbuild": "^0.28.2"
   }
 }

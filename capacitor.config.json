@@ -1,0 +1,13 @@
+{
+  "appId": "com.michben.url2mark",
+  "appName": "url2mark",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#f7f7fb"
+  },
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
+}

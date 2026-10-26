@@ -15,6 +15,8 @@
   const PREFS_KEY = 'url2mark:prefs';
   const THEME_KEY = 'url2mark:theme';
 
+  // Dans l'APK Android, la conversion tourne sur le téléphone (voir src/browser.js).
+  const local = window.url2mark || null;
   let mode = 'url';
   let current = null; // dernier résultat { title, url, ... }
 
@@ -103,13 +105,7 @@
     showError('');
     setLoading(true);
     try {
-      const res = await fetch('api/convert', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      const data = await res.json().catch(() => ({ error: `Erreur ${res.status}` }));
-      if (!res.ok) throw new Error(data.error || `Erreur ${res.status}`);
+      const data = local ? await local.convert(body) : await convertOnServer(body);
       if (signature) data.markdown = data.markdown.trimEnd() + '\n' + SIGNATURE;
       showResult({ ...data, source: mode === 'url' ? data.url : null });
       if (mode === 'url') {
@@ -123,6 +119,17 @@
     } finally {
       setLoading(false);
     }
+  }
+
+  async function convertOnServer(body) {
+    const res = await fetch('api/convert', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json().catch(() => ({ error: `Erreur ${res.status}` }));
+    if (!res.ok) throw new Error(data.error || `Erreur ${res.status}`);
+    return data;
   }
 
   form.addEventListener('submit', (e) => {
@@ -222,8 +229,16 @@ hr{border:0;border-top:1px solid ${dark ? '#2c2c42' : '#e2e2ee'}}
     toast('Markdown copié ✓');
   });
 
-  $('#downloadBtn').addEventListener('click', () => {
+  $('#downloadBtn').addEventListener('click', async () => {
     const name = slugify(current?.title || 'page') + '.md';
+    if (local?.native) {
+      try {
+        toast(`Enregistré dans ${await local.save(name, output.value)}`);
+      } catch (err) {
+        toast(`Échec de l'enregistrement : ${err.message}`);
+      }
+      return;
+    }
     const blob = new Blob([output.value], { type: 'text/markdown;charset=utf-8' });
     const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: name });
     a.click();
@@ -232,6 +247,10 @@ hr{border:0;border-top:1px solid ${dark ? '#2c2c42' : '#e2e2ee'}}
   });
 
   $('#shareBtn').addEventListener('click', async () => {
+    if (local?.native) {
+      try { await local.share(current?.title || 'Markdown', output.value); } catch { /* partage annulé */ }
+      return;
+    }
     if (!current?.source) return toast('Lien disponible uniquement pour une URL');
     const link = new URL(location.pathname, location.origin);
     link.searchParams.set('url', current.source);
@@ -292,6 +311,17 @@ hr{border:0;border-top:1px solid ${dark ? '#2c2c42' : '#e2e2ee'}}
   $('#year').textContent = new Date().getFullYear();
   for (const el of document.querySelectorAll('.origin')) el.textContent = location.origin;
   renderHistory();
+  if (local?.native) {
+    document.documentElement.classList.add('app');
+    $('#downloadBtn').textContent = 'Enregistrer .md';
+    $('#shareBtn').textContent = 'Partager';
+    $('#shareBtn').title = 'Partager le Markdown vers une autre application';
+    local.onSharedUrl((url) => {
+      setMode('url');
+      urlInput.value = url;
+      convert();
+    });
+  }
   const initial = new URLSearchParams(location.search).get('url');
   if (initial) {
     urlInput.value = initial;

@@ -414,3 +414,9 @@ button:disabled { opacity: 0.6; cursor: progress; }
   .input-row { flex-direction: column; }
   .input-row .primary { justify-content: center; }
 }
+
+/* ---------- Application Android ---------- */
+.app .top-actions .ghost-link,
+.app #api,
+.app .hint { display: none; }
+.app .topbar { padding-top: max(14px, env(safe-area-inset-top)); }

@@ -49,6 +49,16 @@ curl -X POST http://localhost:3000/api/convert \
 | `links` | `inline`, `reference`, `none` | `inline` |
 | `format` | `json`, `text` | `json` |
 
+## Application Android (APK)
+
+L'APK embarque la conversion : elle tourne directement sur le téléphone, sans serveur.
+
+- **Télécharger** : onglet [Releases](https://github.com/michben/url2mark/releases/latest) → `url2mark-michben.apk`. Chaque push le recompile via GitHub Actions (`.github/workflows/android-apk.yml`).
+- **Partager depuis Chrome** : menu *Partager* → *url2mark* convertit directement la page.
+- **Enregistrer .md** écrit le fichier dans `Documents/url2mark/`, **Partager** envoie le Markdown vers une autre application.
+
+Compiler soi-même (Android SDK + JDK 21) : `npm run android:apk`, puis `android/app/build/outputs/apk/debug/app-debug.apk`.
+
 ---
 
 <p align="center"><em>— michben</em></p>

@@ -1,0 +1,58 @@
+name: APK Android
+
+on:
+  push:
+    branches: [main, 'claude/**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Installer et tester
+        run: |
+          npm ci
+          npm test
+
+      - name: Compiler l'APK
+        run: |
+          npm run android:sync
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+          cp app/build/outputs/apk/debug/app-debug.apk "$GITHUB_WORKSPACE/url2mark-michben.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: url2mark-michben-apk
+          path: url2mark-michben.apk
+
+      - name: Publier en téléchargement (Releases)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-1.0.${{ github.run_number }}
+          name: url2mark ${{ format('1.0.{0}', github.run_number) }} (Android)
+          target_commitish: ${{ github.sha }}
+          make_latest: true
+          files: url2mark-michben.apk
+          body: |
+            APK Android d'url2mark, signé michben.
+
+            Sur le téléphone : téléchargez `url2mark-michben.apk`, ouvrez-le et autorisez l'installation d'applications de source inconnue si Android le demande.
