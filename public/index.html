@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>url2mark · URL → Markdown par michben</title>
+  <meta name="description" content="Convertissez n'importe quelle page web en Markdown propre : aperçu, copie, téléchargement, options avancées. Une création michben.">
+  <meta name="author" content="michben">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%236d5dfc'/%3E%3Ctext x='32' y='43' font-family='Arial' font-weight='700' font-size='30' fill='white' text-anchor='middle'%3EM%E2%86%93%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="url2mark, accueil">
+      <span class="logo" aria-hidden="true">M↓</span>
+      <span class="brand-name">url2mark</span>
+      <span class="by">by <strong>michben</strong></span>
+    </a>
+    <nav class="top-actions">
+      <a href="#api" class="ghost-link">API</a>
+      <button id="themeToggle" class="icon-btn" type="button" aria-label="Changer de thème" title="Changer de thème">🌓</button>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h1>Convertissez une page web en <span class="accent">Markdown</span></h1>
+      <p class="lead">Collez une URL, récupérez un Markdown propre, prêt pour vos notes, votre doc ou un LLM.</p>
+
+      <div class="mode-switch" role="tablist" aria-label="Source">
+        <button role="tab" class="mode active" data-mode="url" aria-selected="true">URL</button>
+        <button role="tab" class="mode" data-mode="html" aria-selected="false">HTML collé</button>
+      </div>
+
+      <form id="convertForm" class="convert-form" autocomplete="off">
+        <div class="input-row" data-for="url">
+          <input id="urlInput" name="url" type="text" inputmode="url" placeholder="https://exemple.com/article" aria-label="URL à convertir" autofocus>
+          <button id="convertBtn" class="primary" type="submit">
+            <span class="btn-label">Convertir</span>
+            <span class="spinner" aria-hidden="true"></span>
+          </button>
+        </div>
+        <div class="html-row hidden" data-for="html">
+          <textarea id="htmlInput" rows="7" placeholder="&lt;article&gt;&lt;h1&gt;Bonjour&lt;/h1&gt;…&lt;/article&gt;" aria-label="HTML à convertir"></textarea>
+          <button class="primary" type="submit">
+            <span class="btn-label">Convertir le HTML</span>
+            <span class="spinner" aria-hidden="true"></span>
+          </button>
+        </div>
+        <p class="hint"><kbd>Ctrl</kbd> + <kbd>Entrée</kbd> pour convertir · vous pouvez aussi ouvrir <code>?url=…</code></p>
+
+        <details class="options" open>
+          <summary>Options</summary>
+          <div class="options-grid">
+            <label class="toggle"><input type="checkbox" name="readability" checked><span></span>Article seul <small>(supprime menus, pubs…)</small></label>
+            <label class="toggle"><input type="checkbox" name="title" checked><span></span>Titre en en-tête</label>
+            <label class="toggle"><input type="checkbox" name="frontmatter"><span></span>Front matter YAML <small>(Obsidian, Hugo…)</small></label>
+            <label class="toggle"><input type="checkbox" name="images" checked><span></span>Images</label>
+            <label class="toggle"><input type="checkbox" name="tables" checked><span></span>Tableaux</label>
+            <label class="toggle"><input type="checkbox" name="signature" checked><span></span>Signature michben</label>
+            <label class="select">Liens
+              <select name="links">
+                <option value="inline">En ligne [texte](url)</option>
+                <option value="reference">Références [texte][1]</option>
+                <option value="none">Supprimer les liens</option>
+              </select>
+            </label>
+          </div>
+        </details>
+      </form>
+      <div id="error" class="error hidden" role="alert"></div>
+    </section>
+
+    <section id="result" class="result hidden" aria-live="polite">
+      <div class="result-head">
+        <div class="result-meta">
+          <h2 id="resultTitle">Résultat</h2>
+          <p id="resultInfo" class="muted"></p>
+        </div>
+        <div class="result-actions">
+          <button id="copyBtn" class="secondary" type="button">Copier</button>
+          <button id="downloadBtn" class="secondary" type="button">Télécharger .md</button>
+          <button id="shareBtn" class="secondary" type="button" title="Copier un lien direct vers cette conversion">Lien</button>
+        </div>
+      </div>
+      <div class="tabs" role="tablist">
+        <button role="tab" class="tab active" data-tab="markdown" aria-selected="true">Markdown</button>
+        <button role="tab" class="tab" data-tab="preview" aria-selected="false">Aperçu</button>
+        <button role="tab" class="tab" data-tab="split" aria-selected="false">Côte à côte</button>
+      </div>
+      <div id="panes" class="panes" data-view="markdown">
+        <textarea id="output" class="pane md-pane" spellcheck="false" aria-label="Markdown (modifiable)"></textarea>
+        <iframe id="preview" class="pane preview-pane" title="Aperçu du Markdown" sandbox="allow-popups allow-popups-to-escape-sandbox"></iframe>
+      </div>
+      <p class="muted small">Le Markdown est modifiable : vos retouches sont prises en compte pour la copie, le téléchargement et l'aperçu.</p>
+    </section>
+
+    <section id="historySection" class="history hidden">
+      <div class="history-head">
+        <h2>Historique</h2>
+        <button id="clearHistory" class="link-btn" type="button">Effacer</button>
+      </div>
+      <ul id="history"></ul>
+    </section>
+
+    <section id="api" class="api">
+      <h2>API</h2>
+      <p>Utilisez url2mark depuis vos scripts :</p>
+      <pre><code>curl "<span class="origin"></span>/api/convert?url=https://exemple.com&amp;format=text"</code></pre>
+      <pre><code>curl -X POST <span class="origin"></span>/api/convert \
+  -H "content-type: application/json" \
+  -d '{"url":"https://exemple.com","links":"reference","frontmatter":true}'</code></pre>
+      <p class="muted small">Paramètres : <code>url</code> ou <code>html</code>, <code>readability</code>, <code>title</code>, <code>frontmatter</code>, <code>images</code>, <code>tables</code> (true/false), <code>links</code> (inline/reference/none), <code>format</code> (json/text).</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="signature" aria-label="Signature michben">
+      <span class="sig-script">michben</span>
+    </div>
+    <p>url2mark · conçu et signé par <strong>michben</strong> · © <span id="year"></span></p>
+    <p class="muted small">Inspiré de urltomarkdown.com, en mieux.</p>
+  </footer>
+
+  <div id="toast" class="toast" role="status"></div>
+
+  <script src="vendor/marked/marked.umd.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

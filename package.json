@@ -1,0 +1,33 @@
+{
+  "name": "url2mark",
+  "version": "1.0.0",
+  "description": "Convertisseur URL → Markdown amélioré, signé michben",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node --test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/michben/url2mark.git"
+  },
+  "author": "michben",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/michben/url2mark/issues"
+  },
+  "homepage": "https://github.com/michben/url2mark#readme",
+  "dependencies": {
+    "@mozilla/readability": "^0.6.0",
+    "express": "^5.3.0",
+    "jsdom": "^29.1.1",
+    "marked": "^18.1.1",
+    "turndown": "^7.2.4",
+    "turndown-plugin-gfm": "^1.0.2"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  }
+}
